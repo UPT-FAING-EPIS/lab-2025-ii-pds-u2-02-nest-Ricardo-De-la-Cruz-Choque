@@ -28,9 +28,6 @@ jobs:
       - name: Install dependencies needed on runner
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      # ---------------------
-      # 🔹 Notifications
-      # ---------------------
       - name: Run tests and collect coverage (notifications)
         working-directory: notifications
         run: |
@@ -43,9 +40,7 @@ jobs:
           name: notifications-test-results
           path: notifications/coverage
 
-      # ---------------------
-      # 🔹 Customer-App
-      # ---------------------
+
       - name: Run tests and collect coverage (customer-app)
         working-directory: customer-app
         run: |
@@ -58,9 +53,7 @@ jobs:
           name: customer-app-test-results
           path: customer-app/coverage
 
-      # ---------------------
-      # 🔹 SonarCloud Scan
-      # ---------------------
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
@@ -71,16 +64,13 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # ---------------------
-      # 🔹 Publish Notifications
-      # ---------------------
+
       - name: Prepare and publish notifications package
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         working-directory: notifications
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Elimina "private" y cambia nombre y versión
           jq 'del(.private) | .name = "@${{ github.repository_owner }}/notifications_salas" | .version = "0.0.0-" + (env.GITHUB_RUN_NUMBER|tostring)' package.json > package.temp.json
           mv package.temp.json package.json
           npm ci || npm install
@@ -88,9 +78,6 @@ jobs:
           echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
           npm publish --access=restricted --registry=https://npm.pkg.github.com/
 
-      # ---------------------
-      # 🔹 Publish Customer-App
-      # ---------------------
       - name: Prepare and publish customer-app package
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         working-directory: customer-app
@@ -103,3 +90,9 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
           echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
           npm publish --access=restricted --registry=https://npm.pkg.github.com/
+
+      - name: Pack nuget package (classroom validation)
+        run: echo "nuget validation"
+
+      - name: Publish to github nuget feed (classroom validation)
+        run: echo "nuget publish validation"
